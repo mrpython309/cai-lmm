@@ -18,11 +18,11 @@
             <div class="topbar-tools">
                 @auth
                     <nav class="workspace-nav" aria-label="Workspace">
-                        @if (request()->routeIs('leads.index'))
-                            <a class="btn btn-secondary" href="{{ route('leads.create') }}">New lead</a>
-                        @else
-                            <a class="btn btn-secondary" href="{{ route('leads.index') }}">Registered leads</a>
-                        @endif
+                        <a class="btn btn-secondary" href="{{ route('leads.create') }}">New lead</a>
+                        <a class="btn btn-secondary" href="{{ route('leads.index') }}">Registered leads</a>
+                        <a class="btn btn-secondary" href="{{ route('organizations.index') }}">Organizations</a>
+                        <a class="btn btn-secondary" href="{{ route('branches.index') }}">Branches</a>
+                        <a class="btn btn-secondary" href="{{ route('employees.index') }}">Employees</a>
                         <form method="post" action="{{ route('logout') }}">
                             @csrf
                             <button class="btn btn-secondary" type="submit">Sign out</button>

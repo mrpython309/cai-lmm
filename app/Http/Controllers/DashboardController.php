@@ -21,4 +21,19 @@ class DashboardController extends Controller
     {
         return view('leads.form', ['lead' => $lead]);
     }
+
+    public function organizations(): View
+    {
+        return view('organizations.index');
+    }
+
+    public function branches(): View
+    {
+        return view('branches.index');
+    }
+
+    public function employees(): View
+    {
+        return view('employees.index');
+    }
 }

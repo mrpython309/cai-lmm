@@ -9,6 +9,12 @@ const retry = document.getElementById('retryForm');
 const success = document.getElementById('success');
 const submit = form.querySelector('[type="submit"]');
 const reset = form.querySelector('[type="reset"]');
+const orgSelect = form.elements.organization_id;
+const branchSelect = form.elements.branch_id;
+const empSelect = form.elements.assigned_employee_id;
+const orgsUrl = form.dataset.orgsUrl;
+const branchesUrl = form.dataset.branchesUrl;
+const employeesUrl = form.dataset.employeesUrl;
 const company = form.elements.company_name;
 const hotspot = form.elements.hotspot;
 const model = form.elements.recommended_model;
@@ -18,6 +24,7 @@ const editing = form.dataset.editing === 'true';
 const submitLabel = submit.textContent;
 
 let catalog;
+let activeOrganizations = [];
 let savedLead = null;
 let saving = false;
 
@@ -85,9 +92,124 @@ function syncDate() {
     document.getElementById('todayLabel').textContent = formatDate(today);
 }
 
+function fillOrgDropdown(retainedOrg = null) {
+    if (!orgSelect) return;
+    orgSelect.replaceChildren(new Option('Select organization (Optional)', ''));
+    let list = [...activeOrganizations];
+    if (retainedOrg && retainedOrg.id && !list.some(o => o.id === retainedOrg.id)) {
+        list.push({
+            id: retainedOrg.id,
+            organization_name: `${retainedOrg.organization_name} (Inactive)`,
+            organization_code: retainedOrg.organization_code,
+        });
+    }
+    list.forEach(org => {
+        orgSelect.append(new Option(`${org.organization_name} (${org.organization_code})`, org.id));
+    });
+}
+
+async function syncBranchDropdown(orgId, retainedBranch = null, retainedEmployee = null) {
+    if (!branchSelect) return;
+    branchSelect.replaceChildren();
+
+    if (!orgId) {
+        branchSelect.disabled = true;
+        branchSelect.append(new Option('Select organization first', ''));
+        if (empSelect) {
+            empSelect.disabled = true;
+            empSelect.replaceChildren(new Option('Select branch first', ''));
+        }
+        return;
+    }
+
+    branchSelect.disabled = true;
+    branchSelect.append(new Option('Loading branches…', ''));
+
+    try {
+        const res = await api(`${branchesUrl}?organization_id=${orgId}&active=1&all=1`);
+        let branches = res.data ?? [];
+        branchSelect.replaceChildren(new Option('Select branch (Optional)', ''));
+
+        if (retainedBranch && retainedBranch.id && !branches.some(b => b.id === retainedBranch.id)) {
+            branches.push({
+                id: retainedBranch.id,
+                branch_name: `${retainedBranch.branch_name} (Inactive)`,
+                branch_code: retainedBranch.branch_code,
+            });
+        }
+
+        if (branches.length === 0) {
+            branchSelect.replaceChildren(new Option('No active branches for this organization', ''));
+            branchSelect.disabled = true;
+            if (empSelect) {
+                empSelect.disabled = true;
+                empSelect.replaceChildren(new Option('Select branch first', ''));
+            }
+        } else {
+            branches.forEach(b => {
+                branchSelect.append(new Option(`${b.branch_name} (${b.branch_code})`, b.id));
+            });
+            branchSelect.disabled = false;
+            if (retainedBranch) {
+                branchSelect.value = retainedBranch.id ?? retainedBranch;
+                await syncEmployeeDropdown(branchSelect.value, retainedEmployee);
+            }
+        }
+    } catch (err) {
+        branchSelect.replaceChildren(new Option('Error loading branches', ''));
+        branchSelect.disabled = true;
+    }
+}
+
+async function syncEmployeeDropdown(branchId, retainedEmployee = null) {
+    if (!empSelect || !employeesUrl) return;
+    empSelect.replaceChildren();
+
+    if (!branchId) {
+        empSelect.disabled = true;
+        empSelect.append(new Option('Select branch first', ''));
+        return;
+    }
+
+    empSelect.disabled = true;
+    empSelect.append(new Option('Loading employees…', ''));
+
+    try {
+        const res = await api(`${employeesUrl}?branch_id=${branchId}&active=1&all=1`);
+        let employees = res.data ?? [];
+        empSelect.replaceChildren(new Option('Select sales employee (Optional)', ''));
+
+        if (retainedEmployee && retainedEmployee.id && !employees.some(e => e.id === retainedEmployee.id)) {
+            employees.push({
+                id: retainedEmployee.id,
+                name: `${retainedEmployee.name} (Inactive)`,
+                designation: retainedEmployee.designation,
+                employee_id: retainedEmployee.employee_id,
+            });
+        }
+
+        if (employees.length === 0) {
+            empSelect.replaceChildren(new Option('No active employees for this branch', ''));
+            empSelect.disabled = true;
+        } else {
+            employees.forEach(e => {
+                empSelect.append(new Option(`${e.name} (${e.designation}) - ${e.employee_id}`, e.id));
+            });
+            empSelect.disabled = false;
+            if (retainedEmployee) {
+                empSelect.value = retainedEmployee.id ?? retainedEmployee;
+            }
+        }
+    } catch (err) {
+        empSelect.replaceChildren(new Option('Error loading employees', ''));
+        empSelect.disabled = true;
+    }
+}
+
 function populate(lead = {}) {
     syncApplication(lead.application ?? '');
     for (const control of fields.elements) {
+        if (control === orgSelect || control === branchSelect || control === empSelect) continue;
         const value = lead[control.name] ?? '';
         if (control.type === 'radio') {
             control.checked = control.value === value;
@@ -97,6 +219,21 @@ function populate(lead = {}) {
     }
     syncCompany();
     syncDate();
+
+    if (orgSelect) {
+        fillOrgDropdown(lead.organization);
+        orgSelect.value = lead.organization_id ?? '';
+        if (lead.organization_id) {
+            syncBranchDropdown(lead.organization_id, lead.branch, lead.assigned_employee);
+        } else {
+            branchSelect.replaceChildren(new Option('Select organization first', ''));
+            branchSelect.disabled = true;
+            if (empSelect) {
+                empSelect.replaceChildren(new Option('Select branch first', ''));
+                empSelect.disabled = true;
+            }
+        }
+    }
 }
 
 function clearErrors() {
@@ -141,8 +278,15 @@ function showSuccess(lead) {
     const details = document.createElement('div');
     details.className = 'saved-details';
     details.textContent = Object.entries(leadLabels)
-        .filter(([name]) => lead[name] !== null)
-        .map(([name, label]) => `${label}: ${lead[name]}`).join('\n');
+        .map(([name, label]) => {
+            let val = lead[name];
+            if (name === 'organization') val = lead.organization ? `${lead.organization.organization_name} (${lead.organization.organization_code})` : null;
+            if (name === 'branch') val = lead.branch ? `${lead.branch.branch_name} (${lead.branch.branch_code})` : null;
+            if (val === null || val === undefined) return null;
+            return `${label}: ${val}`;
+        })
+        .filter(Boolean)
+        .join('\n');
     const copy = document.createElement('button');
     copy.type = 'button';
     copy.className = 'btn btn-secondary';
@@ -167,11 +311,13 @@ async function loadForm() {
     status.hidden = false;
     form.setAttribute('aria-busy', 'true');
     try {
-        const [choices, lead] = await Promise.all([
+        const [choices, orgsRes, lead] = await Promise.all([
             api(form.dataset.optionsUrl),
+            orgsUrl ? api(`${orgsUrl}?active=1&all=1`).catch(() => ({ data: [] })) : null,
             editing ? api(form.dataset.leadUrl) : null,
         ]);
         catalog = choices.data;
+        if (orgsRes) activeOrganizations = orgsRes.data ?? [];
         const groups = ['business_type', 'vehicle_category', 'current_vehicle', ...Array.from(choiceGroups, group => group.dataset.choices)];
         const missingGroup = groups.some(name => !options(name).length);
         const missingApplicationOptions = options('application').some(({ value }) =>
@@ -198,6 +344,8 @@ async function loadForm() {
 }
 
 form.addEventListener('change', event => {
+    if (event.target === orgSelect) syncBranchDropdown(orgSelect.value);
+    if (event.target === branchSelect) syncEmployeeDropdown(branchSelect.value);
     if (event.target.name === 'business_type') syncCompany();
     if (event.target.name === 'application') syncApplication(event.target.value);
     if (event.target === followUp) syncDate();
@@ -224,6 +372,9 @@ form.addEventListener('submit', async event => {
     if (!form.reportValidity()) return;
 
     const data = Object.fromEntries(new FormData(form));
+    if (orgSelect) data.organization_id = orgSelect.value ? parseInt(orgSelect.value, 10) : null;
+    if (branchSelect) data.branch_id = branchSelect.value ? parseInt(branchSelect.value, 10) : null;
+    if (empSelect) data.assigned_employee_id = empSelect.value ? parseInt(empSelect.value, 10) : null;
     clearErrors();
     success.hidden = true;
     saving = true;

@@ -2,6 +2,8 @@ const csrf = document.querySelector('meta[name="csrf-token"]').content;
 const timeZone = document.querySelector('meta[name="workspace-timezone"]').content;
 
 export const leadLabels = {
+    organization: 'Dealer organization',
+    branch: 'Branch location',
     lead_source: 'Lead source',
     business_type: 'Business type',
     company_name: 'Company name',
@@ -22,14 +24,22 @@ export const leadLabels = {
     remarks: 'Remarks / customer requirement',
 };
 
-export async function api(url, { method = 'GET', data, signal } = {}) {
+export async function api(url, { method = 'GET', data, body, signal } = {}) {
     const headers = { Accept: 'application/json' };
     if (method !== 'GET') headers['X-CSRF-TOKEN'] = csrf;
-    if (data !== undefined) headers['Content-Type'] = 'application/json';
+
+    let payloadBody;
+    if (data !== undefined) {
+        headers['Content-Type'] = 'application/json';
+        payloadBody = JSON.stringify(data);
+    } else if (body !== undefined) {
+        headers['Content-Type'] = 'application/json';
+        payloadBody = typeof body === 'string' ? body : JSON.stringify(body);
+    }
 
     let response;
     try {
-        response = await fetch(url, { method, headers, body: JSON.stringify(data), signal, cache: 'no-store' });
+        response = await fetch(url, { method, headers, body: payloadBody, signal, cache: 'no-store' });
     } catch (error) {
         if (error.name === 'AbortError') throw error;
         throw new Error('The workspace could not reach the server. Check your connection and try again.');
@@ -46,9 +56,10 @@ export async function api(url, { method = 'GET', data, signal } = {}) {
         422: 'Check the highlighted fields and try again.',
         429: 'Too many requests. Wait a moment and try again.',
     };
-    const error = new Error(messages[response.status] ?? 'The workspace could not complete the request. Try again.');
+    const error = new Error(payload?.message ?? messages[response.status] ?? 'The workspace could not complete the request. Try again.');
     error.status = response.status;
     error.fields = response.status === 422 ? payload?.errors : undefined;
+    error.errors = error.fields;
     throw error;
 }
 

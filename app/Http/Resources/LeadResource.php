@@ -13,6 +13,10 @@ class LeadResource extends JsonResource
             'id' => $this->id,
             ...$this->resource->only($this->resource->getFillable()),
             'follow_up_date' => $this->follow_up_date->toDateString(),
+            'organization' => new OrganizationResource($this->whenLoaded('organization')),
+            'branch' => new BranchResource($this->whenLoaded('branch')),
+            'assigned_employee' => new EmployeeResource($this->whenLoaded('assignedEmployee')),
+            'assignment_history' => LeadAssignmentResource::collection($this->whenLoaded('assignments')),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

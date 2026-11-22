@@ -32,16 +32,37 @@
 
     <form id="leadForm" method="post"
           data-options-url="{{ route('api.lead-options') }}"
+          data-orgs-url="{{ route('api.organizations.index') }}"
+          data-branches-url="{{ route('api.branches.index') }}"
+          data-employees-url="{{ route('api.employees.index') }}"
           data-lead-url="{{ $lead ? route('api.leads.show', $lead) : route('api.leads.store') }}"
           data-editing="{{ $lead ? 'true' : 'false' }}">
         <fieldset class="form-fields" id="formFields" aria-label="Customer lead details" disabled>
             <section class="card" aria-labelledby="leadInformation">
-                <div class="section-head"><div class="step">01</div><div><h2 id="leadInformation">Lead information</h2><p>Identify the customer and how the opportunity was generated.</p></div></div>
+                <div class="section-head"><div class="step">01</div><div><h2 id="leadInformation">Lead information</h2><p>Identify the customer, dealer network and how the opportunity was generated.</p></div></div>
                 <div class="section-body"><div class="grid">
                     <div class="field full">
                         <span class="field-label" id="leadSourceLabel">Lead source <span class="req">*</span></span>
                         <div class="source-grid" role="radiogroup" aria-labelledby="leadSourceLabel" aria-describedby="leadSourceHint" data-choices="lead_source" data-required></div>
                         <div class="hint" id="leadSourceHint">Select the channel through which this lead was received.</div>
+                    </div>
+                    <div class="field">
+                        <label for="organizationId">Dealer organization</label>
+                        <select id="organizationId" name="organization_id">
+                            <option value="">Select organization (Optional)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="branchId">Branch location</label>
+                        <select id="branchId" name="branch_id" disabled>
+                            <option value="">Select organization first</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="assignedEmployeeId">Assigned sales employee</label>
+                        <select id="assignedEmployeeId" name="assigned_employee_id" disabled>
+                            <option value="">Select branch first</option>
+                        </select>
                     </div>
                     <div class="field">
                         <label for="businessType">Business type <span class="req">*</span></label>
