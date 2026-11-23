@@ -236,9 +236,70 @@ textarea { min-height: 84px; resize: vertical; }
 .timeline .choice > span { min-height: 64px; flex-direction: column; align-items: flex-start; }
 .timeline small { color: var(--text-muted); font-size: 11px; font-weight: 500; }
 .hint { margin-top: 6px; color: var(--text-muted); font-size: 11px; }
-.consultant-search { margin-block-end: 8px; }
-.consultant-search .hint { margin-block-end: 0; }
-.consultant-search .hint:empty { display: none; }
+.lead-information { overflow: visible; }
+.lead-information > .section-head { border-start-start-radius: inherit; border-start-end-radius: inherit; }
+.consultant-picker { position: relative; }
+.consultant-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 41px;
+    padding: 9px 11px;
+    border: 1px solid var(--control-line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    text-align: start;
+    cursor: pointer;
+}
+.consultant-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.consultant-trigger::after {
+    content: '';
+    flex: 0 0 7px;
+    height: 7px;
+    border: solid currentColor;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+}
+.consultant-trigger[aria-expanded="true"] { border-color: var(--accent); }
+.consultant-trigger[aria-expanded="true"]::after { transform: rotate(225deg); }
+.consultant-dropdown {
+    position: absolute;
+    z-index: 2;
+    inset: calc(100% + 5px) 0 auto;
+    padding: 8px;
+    border: 1px solid var(--control-line);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 8px 22px #261f2326;
+}
+.consultant-dropdown .hint { margin-block-end: 4px; padding-inline: 4px; }
+.consultant-dropdown .hint:empty { display: none; }
+.consultant-results {
+    max-height: min(210px, 36dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin-top: 5px;
+}
+.consultant-results:empty { display: none; }
+.consultant-option {
+    display: block;
+    width: 100%;
+    padding: 9px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink);
+    text-align: start;
+    cursor: pointer;
+}
+.consultant-option:hover, .consultant-option:focus-visible, .consultant-option[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+}
+.consultant-option:focus-visible { outline-offset: -2px; }
 
 .footer {
     position: sticky;

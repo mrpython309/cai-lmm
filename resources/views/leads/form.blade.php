@@ -46,7 +46,7 @@
               data-statuses-url="{{ route('api.mahindra.lead-statuses') }}"
               data-editing="{{ $lead ? 'true' : 'false' }}">
             <fieldset class="form-fields" id="formFields" aria-label="Customer lead details" disabled>
-                <section class="card" aria-labelledby="leadInformation">
+                <section class="card lead-information" aria-labelledby="leadInformation">
                     <div class="section-head"><div><h2 id="leadInformation" tabindex="-1">Lead information</h2><p>Identify the customer, branch, and how the opportunity was generated.</p></div></div>
                     <div class="section-body"><div class="grid">
                         <div class="field">
@@ -76,15 +76,22 @@
                             <input type="hidden" name="branch_name" id="branchName">
                         </div>
                         <div class="field">
-                            <label for="assignedEmployee">Assigned consultant (CRM)</label>
-                            <div class="consultant-search" id="consultantSearchPanel" hidden>
-                                <input type="search" id="consultantSearch" aria-label="Search consultants"
-                                    aria-controls="assignedEmployee" placeholder="Search by name or code" autocomplete="off">
-                                <p class="hint" id="consultantSearchStatus" role="status"></p>
-                            </div>
+                            <label id="consultantLabel" for="assignedEmployee">Assigned consultant (CRM)</label>
                             <select id="assignedEmployee" name="assigned_employee_id">
                                 <option value="">Select consultant</option>
                             </select>
+                            <div class="consultant-picker" id="consultantPicker" hidden>
+                                <button type="button" class="consultant-trigger" id="consultantTrigger" aria-expanded="false"
+                                    aria-controls="consultantDropdown" aria-labelledby="consultantLabel consultantSelection">
+                                    <span id="consultantSelection">Select consultant</span>
+                                </button>
+                                <div class="consultant-dropdown" id="consultantDropdown" hidden>
+                                    <input type="search" id="consultantSearch" aria-label="Search consultants"
+                                        aria-controls="consultantResults" placeholder="Search by name or code" autocomplete="off">
+                                    <p class="hint" id="consultantSearchStatus" role="status"></p>
+                                    <div class="consultant-results" id="consultantResults" role="group" aria-label="Consultants"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="field full">
                             <span class="field-label" id="leadSourceLabel">Lead source channel <span class="req">*</span></span>

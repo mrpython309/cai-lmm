@@ -24,9 +24,14 @@ const crmCompany = form.elements.company_id;
 const crmBranch = form.elements.branch_id;
 const branchName = form.elements.branch_name;
 const assignedEmployee = form.elements.assigned_employee_id;
+const consultantLabel = document.getElementById('consultantLabel');
+const consultantPicker = document.getElementById('consultantPicker');
+const consultantTrigger = document.getElementById('consultantTrigger');
+const consultantSelection = document.getElementById('consultantSelection');
+const consultantDropdown = document.getElementById('consultantDropdown');
 const consultantSearch = document.getElementById('consultantSearch');
-const consultantSearchPanel = document.getElementById('consultantSearchPanel');
 const consultantSearchStatus = document.getElementById('consultantSearchStatus');
+const consultantResults = document.getElementById('consultantResults');
 const enquiryType = form.elements.enquiry_type_id;
 const enquiryTypeName = form.elements.enquiry_type;
 const crmLeadSource = form.elements.lead_source_id;
@@ -64,20 +69,45 @@ async function loadEmployees(endpoint) {
     return employees;
 }
 
-function renderEmployeeOptions(selected = null) {
-    const query = consultantSearch.value.trim().toLowerCase();
-    const matches = employeeOptions.filter(option => option.text.toLowerCase().includes(query));
-    const visible = selected?.value && !matches.includes(selected) ? [selected, ...matches] : matches;
+function syncConsultantSelection() {
+    consultantSelection.textContent = assignedEmployee.selectedOptions[0]?.text || 'Select consultant';
+}
 
-    assignedEmployee.replaceChildren(new Option('Select consultant', ''), ...visible);
-    assignedEmployee.value = selected?.value ?? '';
+function setConsultantDropdown(open) {
+    consultantDropdown.hidden = !open;
+    consultantTrigger.setAttribute('aria-expanded', String(open));
+
+    if (open) {
+        consultantSearch.value = '';
+        renderConsultantResults();
+        consultantSearch.focus();
+    }
+}
+
+function renderConsultantResults() {
+    const query = consultantSearch.value.trim().toLowerCase();
+    const options = Array.from(assignedEmployee.options);
+    const matches = options.filter(option => option.value && option.text.toLowerCase().includes(query));
+    const visible = assignedEmployee.value && !query ? [options[0], ...matches] : matches;
+
+    consultantResults.replaceChildren(...visible.map((option, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'consultant-option';
+        button.dataset.consultant = option.value;
+        button.tabIndex = index === 0 ? 0 : -1;
+        button.setAttribute('aria-pressed', String(option.value === assignedEmployee.value));
+        button.textContent = option.value ? option.text : 'Clear selection';
+        return button;
+    }));
+    consultantResults.scrollTop = 0;
 
     if (!query) {
         consultantSearchStatus.textContent = '';
-    } else if (matches.length) {
-        consultantSearchStatus.textContent = matches.length === 1 ? '1 consultant found' : `${matches.length} consultants found`;
-    } else {
+    } else if (!matches.length) {
         consultantSearchStatus.textContent = 'No consultants match your search.';
+    } else {
+        consultantSearchStatus.textContent = matches.length === 1 ? '1 consultant found' : `${matches.length} consultants found`;
     }
 }
 
@@ -295,8 +325,8 @@ async function loadResponses(statusId, selectedResponseId = null) {
 }
 
 function populate(lead = {}) {
-    consultantSearch.value = '';
-    renderEmployeeOptions();
+    setConsultantDropdown(false);
+    assignedEmployee.replaceChildren(new Option('Select consultant', ''), ...employeeOptions);
     syncApplication(lead.application ?? '');
     for (const control of fields.elements) {
         if (!control.name) continue;
@@ -346,6 +376,7 @@ function populate(lead = {}) {
         assignedEmployee.value = id;
     }
 
+    syncConsultantSelection();
     syncCompany();
     syncDate();
 }
@@ -457,7 +488,9 @@ async function loadForm() {
             option.dataset.name = employee.employee_name;
             return option;
         });
-        consultantSearchPanel.hidden = employeeOptions.length <= 12;
+        consultantPicker.hidden = employeeOptions.length <= 12;
+        assignedEmployee.hidden = !consultantPicker.hidden;
+        consultantLabel.htmlFor = consultantPicker.hidden ? assignedEmployee.id : consultantTrigger.id;
         if (crmEnquiries?.data?.length && enquiryType) {
             enquiryType.replaceChildren(
                 new Option('Select enquiry type', ''),
@@ -536,9 +569,50 @@ form.addEventListener('change', event => {
     }
 });
 
-consultantSearch.addEventListener('input', () => renderEmployeeOptions(assignedEmployee.selectedOptions[0]));
-consultantSearch.addEventListener('keydown', event => {
-    if (event.key === 'Enter') event.preventDefault();
+consultantTrigger.addEventListener('click', () => setConsultantDropdown(consultantDropdown.hidden));
+consultantSearch.addEventListener('input', renderConsultantResults);
+consultantResults.addEventListener('click', event => {
+    const choice = event.target.closest('[data-consultant]');
+    if (!choice) return;
+
+    assignedEmployee.value = choice.dataset.consultant;
+    syncConsultantSelection();
+    setConsultantDropdown(false);
+    consultantTrigger.focus();
+    assignedEmployee.dispatchEvent(new Event('input', { bubbles: true }));
+    assignedEmployee.dispatchEvent(new Event('change', { bubbles: true }));
+});
+
+consultantPicker.addEventListener('keydown', event => {
+    if (consultantDropdown.hidden) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        setConsultantDropdown(false);
+        consultantTrigger.focus();
+        return;
+    }
+    if (event.target === consultantSearch && event.key === 'Enter') {
+        event.preventDefault();
+        return;
+    }
+    if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+
+    const choices = Array.from(consultantResults.querySelectorAll('[data-consultant]'));
+    if (!choices.length) return;
+    event.preventDefault();
+    const focused = choices.indexOf(document.activeElement);
+    const index = event.key === 'ArrowDown' ? focused + 1 : focused - 1;
+    const next = index < 0 ? choices.length - 1 : index % choices.length;
+    for (const choice of choices) choice.tabIndex = -1;
+    choices[next].tabIndex = 0;
+    choices[next].focus();
+});
+
+document.addEventListener('pointerdown', event => {
+    if (!consultantDropdown.hidden && !consultantPicker.contains(event.target)) setConsultantDropdown(false);
+});
+consultantPicker.addEventListener('focusout', event => {
+    if (event.relatedTarget && !consultantPicker.contains(event.relatedTarget)) setConsultantDropdown(false);
 });
 
 form.addEventListener('input', event => {
