@@ -6,34 +6,28 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="workspace-timezone" content="{{ config('app.timezone') }}">
     <title>CAI LMM | @yield('title')</title>
-    <link rel="stylesheet" href="{{ asset('assets/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/dashboard.css') }}?v={{ filemtime(public_path('assets/dashboard.css')) }}">
     @stack('scripts')
 </head>
 <body>
-<div class="app-shell">
-    <div class="main-panel single-page">
-        <header class="topbar">
-            <div class="mobile-brand"><div class="logo">CAI</div><b>CAI LMM BUSINESS HUB</b></div>
-            <div class="topbar-left"><b>Sales Dashboard &amp; Customer Registration</b></div>
-            <div class="topbar-tools">
-                @auth
-                    <nav class="workspace-nav" aria-label="Workspace">
-                        @if (request()->routeIs('leads.index'))
-                            <a class="btn btn-secondary" href="{{ route('leads.create') }}">New lead</a>
-                        @else
-                            <a class="btn btn-secondary" href="{{ route('leads.index') }}">Registered leads</a>
-                        @endif
-                        <form method="post" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="btn btn-secondary" type="submit">Sign out</button>
-                        </form>
-                    </nav>
-                @endauth
-                <div class="topbar-right"><span class="online-dot"></span><span>CAI Sales Workspace</span><div class="top-avatar">CA</div></div>
-            </div>
-        </header>
-        @yield('content')
+<header class="topbar">
+    <div class="topbar-inner">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">CAI</span>
+            <span>CAI LMM <small>Sales Workspace</small></span>
+        </div>
+        @auth
+            <nav class="workspace-nav" aria-label="Workspace">
+                <a href="{{ route('leads.create') }}" @if (request()->routeIs('leads.create', 'leads.edit')) aria-current="page" @endif>New lead</a>
+                <a href="{{ route('leads.index') }}" @if (request()->routeIs('leads.index')) aria-current="page" @endif>Registered leads</a>
+            </nav>
+            <form class="sign-out" method="post" action="{{ route('logout') }}">
+                @csrf
+                <button class="btn btn-secondary" type="submit">Sign out</button>
+            </form>
+        @endauth
     </div>
-</div>
+</header>
+@yield('content')
 </body>
 </html>

@@ -9,7 +9,6 @@
 @section('content')
 <div class="hero">
     <div>
-        <div class="eyebrow">SALES CRM <span>•</span> LEAD MANAGEMENT</div>
         <h1>Registered Leads</h1>
         <p>View, edit or delete customer leads.</p>
     </div>
