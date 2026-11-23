@@ -10,6 +10,7 @@ class Lead extends Model
         'lead_source', 'business_type', 'company_name', 'location', 'customer_name', 'mobile', 'email',
         'application', 'vehicle_category', 'hotspot', 'current_vehicle', 'exchange', 'recommended_model',
         'test_drive', 'finance', 'priority', 'follow_up_date', 'remarks',
+        'lead_source_channel', 'assigned_employee_name',
         'organization_id', 'company_id', 'branch_id', 'branch_name', 'assigned_employee_id',
         'vehicle_model_id', 'variant_id', 'variant_name',
         'enquiry_type_id', 'enquiry_type', 'lead_source_id',

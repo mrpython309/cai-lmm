@@ -77,7 +77,7 @@
                     </div>
                     <div class="field full">
                         <span class="field-label" id="leadSourceLabel">Lead source channel <span class="req">*</span></span>
-                        <div class="source-grid" role="radiogroup" aria-labelledby="leadSourceLabel" aria-describedby="leadSourceHint" data-choices="lead_source" data-required></div>
+                        <div class="source-grid" role="radiogroup" aria-labelledby="leadSourceLabel" aria-describedby="leadSourceHint" data-choices="lead_source" data-input="lead_source_channel" data-required></div>
                         <div class="hint" id="leadSourceHint">Select the primary channel through which this lead was received.</div>
                     </div>
                     <div class="field">

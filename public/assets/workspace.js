@@ -3,7 +3,9 @@ const timeZone = document.querySelector('meta[name="workspace-timezone"]').conte
 
 export const leadLabels = {
     enquiry_type: 'Enquiry type',
-    lead_source: 'Lead source',
+    lead_source: 'Enquiry source',
+    lead_source_channel: 'Lead source channel',
+    assigned_employee_display: 'Assigned consultant',
     business_type: 'Business type',
     branch_name: 'Branch / Location',
     location: 'Company / customer location',
