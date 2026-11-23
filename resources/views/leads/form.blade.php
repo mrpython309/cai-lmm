@@ -3,7 +3,7 @@
 @section('title', $lead ? 'Edit Customer Lead' : 'New Customer Registration')
 
 @push('scripts')
-    <script type="module" src="{{ asset('assets/lead-form.js') }}"></script>
+    <script type="module" src="{{ asset('assets/lead-form.js') }}?v={{ filemtime(public_path('assets/lead-form.js')) }}"></script>
 @endpush
 
 @section('content')
@@ -83,7 +83,7 @@
                         </div>
                         <div class="field full">
                             <span class="field-label" id="leadSourceLabel">Lead source channel <span class="req">*</span></span>
-                            <div class="source-grid" role="radiogroup" aria-labelledby="leadSourceLabel" aria-describedby="leadSourceHint" data-choices="lead_source" data-input="lead_source_channel" data-required></div>
+                            <div class="source-grid" role="radiogroup" aria-labelledby="leadSourceLabel" aria-describedby="leadSourceHint" data-choices="lead_source" data-required></div>
                             <div class="hint" id="leadSourceHint">Select the primary channel through which this lead was received.</div>
                         </div>
                         <div class="field">

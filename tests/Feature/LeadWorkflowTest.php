@@ -145,13 +145,13 @@ class LeadWorkflowTest extends TestCase
         ]);
 
         $invalid = array_replace($this->leadDetails(), [
-            'lead_source_channel' => 'Invalid channel', 'business_type' => 'Logistics', 'company_name' => '',
+            'lead_source' => str_repeat('x', 121), 'recommended_model' => str_repeat('x', 121), 'business_type' => 'Logistics', 'company_name' => '',
             'mobile' => '5123456789', 'email' => 'invalid-email', 'vehicle_category' => 'Unknown category',
             'application' => 'Cargo', 'finance' => 'Later', 'priority' => 'LATER',
             'follow_up_date' => today()->subDay()->toDateString(), 'remarks' => str_repeat('a', 5001),
         ]);
         $this->postJson('/api/leads', $invalid)->assertUnprocessable()->assertJsonValidationErrors([
-            'lead_source_channel', 'company_name', 'mobile', 'email', 'vehicle_category', 'hotspot',
+            'lead_source', 'company_name', 'mobile', 'email', 'vehicle_category', 'hotspot', 'recommended_model',
             'finance', 'priority', 'follow_up_date', 'remarks',
         ]);
         $this->postJson('/api/leads', array_replace($this->leadDetails(), ['application' => ['Cargo']]))
@@ -186,27 +186,6 @@ class LeadWorkflowTest extends TestCase
             ->assertJsonPath('meta.last_page', 2)->assertJsonPath('data.0.customer_name', 'Customer 16');
         $this->getJson('/api/leads?page=2')->assertOk()->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.customer_name', 'Customer 1');
-    }
-
-    public function test_crm_labels_round_trip(): void
-    {
-        $this->seed();
-        $this->actingAs(User::factory()->create());
-        $payload = array_replace($this->leadDetails(), [
-            'lead_source' => 'CRM campaign', 'lead_source_id' => 42, 'lead_source_channel' => 'Digital',
-            'recommended_model' => 'CRM model', 'assigned_employee_id' => 17,
-            'assigned_employee_name' => 'Test Consultant',
-        ]);
-        $created = $this->postJson('/api/leads', $payload)->assertCreated();
-        $url = '/api/leads/'.$created->json('data.id');
-        $this->getJson($url)->assertOk()->assertJsonPath('data.lead_source', 'CRM campaign')
-            ->assertJsonPath('data.lead_source_channel', 'Digital')
-            ->assertJsonPath('data.assigned_employee_display', 'Test Consultant');
-        unset($payload['lead_source_channel'], $payload['assigned_employee_name']);
-        $this->putJson($url, $payload)->assertOk()->assertJsonPath('data.assigned_employee_display', 'Test Consultant')
-            ->assertJsonPath('data.lead_source_channel', 'Digital');
-        $this->putJson($url, [...$payload, 'assigned_employee_id' => null])->assertOk()
-            ->assertJsonPath('data.assigned_employee_display', null);
     }
 
     private function leadDetails(): array

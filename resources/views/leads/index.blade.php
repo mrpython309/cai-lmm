@@ -3,7 +3,7 @@
 @section('title', 'Registered Leads')
 
 @push('scripts')
-    <script type="module" src="{{ asset('assets/lead-list.js') }}"></script>
+    <script type="module" src="{{ asset('assets/lead-list.js') }}?v={{ filemtime(public_path('assets/lead-list.js')) }}"></script>
 @endpush
 
 @section('content')

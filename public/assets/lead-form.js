@@ -44,22 +44,6 @@ function options(field, scope = '') {
     return (catalog[field] ?? []).filter(option => option.scope === scope);
 }
 
-async function loadEmployees(endpoint) {
-    const url = new URL(endpoint, window.location.href);
-    url.searchParams.set('per_page', '100');
-    const employees = [];
-    let page = 1;
-    let lastPage;
-    do {
-        url.searchParams.set('page', String(page));
-        const result = await api(url);
-        employees.push(...result.data);
-        lastPage = result.pagination?.last_page ?? 1;
-        page++;
-    } while (page <= lastPage);
-    return employees;
-}
-
 function fillSelect(select, choices, placeholder) {
     if (!select) return;
     const prompt = placeholder ?? select.options[0]?.text ?? 'Select';
@@ -73,7 +57,7 @@ function renderChoices(group) {
         label.className = 'choice';
         const radio = document.createElement('input');
         radio.type = 'radio';
-        radio.name = group.dataset.input || name;
+        radio.name = name;
         radio.value = option.value;
         radio.required = group.hasAttribute('data-required');
         const text = document.createElement('span');
@@ -198,7 +182,6 @@ async function loadSources(typeId, selectedSourceId = null) {
     crmLeadSource.disabled = true;
     try {
         const res = await api(`/api/mahindra/enquiry-types/${typeId}/sources`);
-        if (String(enquiryType.value) !== String(typeId)) return;
         const sources = res.data ?? [];
         crmLeadSource.replaceChildren(
             new Option(sources.length ? 'Select enquiry source' : 'No sources found', ''),
@@ -209,9 +192,7 @@ async function loadSources(typeId, selectedSourceId = null) {
             crmLeadSource.value = String(selectedSourceId);
         }
     } catch {
-        if (String(enquiryType.value) === String(typeId)) {
-            crmLeadSource.replaceChildren(new Option('Sources unavailable', ''));
-        }
+        crmLeadSource.replaceChildren(new Option('Sources unavailable', ''));
     }
 }
 
@@ -277,9 +258,7 @@ function populate(lead = {}) {
     syncApplication(lead.application ?? '');
     for (const control of fields.elements) {
         if (!control.name) continue;
-        const value = control.name === 'lead_source_channel'
-            ? (lead.lead_source_channel ?? lead.lead_source ?? '')
-            : lead[control.name] ?? '';
+        const value = lead[control.name] ?? '';
         if (control.type === 'radio') {
             control.checked = control.value === value;
         } else if (control.type !== 'file') {
@@ -314,13 +293,7 @@ function populate(lead = {}) {
         loadResponses(lead.lead_status_id, lead.status_response_id);
     }
     if (lead.assigned_employee_id) {
-        const id = String(lead.assigned_employee_id);
-        if (!Array.from(assignedEmployee.options).some(option => option.value === id)) {
-            const option = new Option(lead.assigned_employee_name || 'Consultant #' + id, id);
-            option.dataset.name = lead.assigned_employee_name || '';
-            assignedEmployee.add(option);
-        }
-        assignedEmployee.value = id;
+        assignedEmployee.value = String(lead.assigned_employee_id);
     }
 
     syncCompany();
@@ -399,7 +372,7 @@ async function loadForm() {
             api(form.dataset.optionsUrl),
             editing ? api(form.dataset.leadUrl) : null,
             form.dataset.companiesUrl ? api(form.dataset.companiesUrl).catch(() => null) : null,
-            form.dataset.employeesUrl ? loadEmployees(form.dataset.employeesUrl).catch(() => null) : null,
+            form.dataset.employeesUrl ? api(form.dataset.employeesUrl).catch(() => null) : null,
             form.dataset.modelsUrl ? api(form.dataset.modelsUrl).catch(() => null) : null,
             form.dataset.enquiryTypesUrl ? api(form.dataset.enquiryTypesUrl).catch(() => null) : null,
             form.dataset.statusesUrl ? api(form.dataset.statusesUrl).catch(() => null) : null,
@@ -429,14 +402,10 @@ async function loadForm() {
                 ...crmCompanies.data.map(c => new Option(`${c.name} (${c.code || 'N/A'})`, c.id))
             );
         }
-        if (crmEmployees?.length && assignedEmployee) {
+        if (crmEmployees?.data?.length && assignedEmployee) {
             assignedEmployee.replaceChildren(
                 new Option('Select consultant', ''),
-                ...crmEmployees.map(employee => {
-                    const option = new Option(employee.employee_name + ' (' + employee.emp_code + ')', employee.id);
-                    option.dataset.name = employee.employee_name;
-                    return option;
-                })
+                ...crmEmployees.data.map(e => new Option(`${e.employee_name} (${e.emp_code || 'EMP'})`, e.id))
             );
         }
         if (crmEnquiries?.data?.length && enquiryType) {
@@ -491,6 +460,18 @@ form.addEventListener('change', event => {
         loadSources(target.value);
     }
 
+    // CRM Enquiry Source -> Sync with lead_source
+    if (target === crmLeadSource) {
+        const opt = target.selectedOptions[0];
+        if (opt?.value) {
+            // Check if there is a matching radio button in lead_source
+            const radio = form.querySelector(`input[name="lead_source"][value="${CSS.escape(opt.text)}"]`);
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+    }
+
     // Recommended model -> extract vehicle_model_id and load variants
     if (target === model) {
         const opt = target.selectedOptions[0];
@@ -538,14 +519,6 @@ form.addEventListener('submit', async event => {
     if (!form.reportValidity()) return;
 
     const data = Object.fromEntries(new FormData(form));
-    if (crmLeadSource.disabled && enquiryType.value && savedLead?.lead_source_id &&
-        String(savedLead.enquiry_type_id) === enquiryType.value) {
-        data.lead_source_id = savedLead.lead_source_id;
-        data.lead_source = savedLead.lead_source;
-    } else {
-        data.lead_source = crmLeadSource.value ? crmLeadSource.selectedOptions[0].text : data.lead_source_channel;
-    }
-    data.assigned_employee_name = assignedEmployee.selectedOptions[0]?.dataset.name || null;
     clearErrors();
     success.hidden = true;
     saving = true;

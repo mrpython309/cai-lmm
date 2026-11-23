@@ -28,8 +28,6 @@ class SaveLeadRequest extends FormRequest
         }
 
         return [
-            'lead_source_channel' => ['nullable', 'string', $choice('lead_source')],
-            'assigned_employee_name' => ['nullable', 'string', 'max:255'],
             'lead_source' => ['required', 'string', 'max:120'],
             'business_type' => ['required', 'string', $choice('business_type')],
             'company_name' => [Rule::excludeIf(! $companyRequired), 'required', 'string', 'max:255'],
@@ -80,18 +78,6 @@ class SaveLeadRequest extends FormRequest
 
     public function leadAttributes(): array
     {
-        $attributes = array_replace(array_fill_keys((new Lead)->getFillable(), null), $this->validated());
-        $existing = $this->route('lead');
-        if ($existing && ! $this->has('lead_source_channel')) {
-            $attributes['lead_source_channel'] = $existing->lead_source_channel;
-        }
-        if (empty($attributes['assigned_employee_id'])) {
-            $attributes['assigned_employee_name'] = null;
-        } elseif ($existing && ! $this->has('assigned_employee_name') &&
-            (int) $attributes['assigned_employee_id'] === $existing->assigned_employee_id) {
-            $attributes['assigned_employee_name'] = $existing->assigned_employee_name;
-        }
-
-        return $attributes;
+        return array_replace(array_fill_keys((new Lead)->getFillable(), null), $this->validated());
     }
 }
