@@ -3,7 +3,7 @@
 @section('title', $lead ? 'Edit Customer Lead' : 'New Customer Registration')
 
 @push('scripts')
-    <script type="module" src="{{ asset('assets/lead-form.js') }}"></script>
+    <script type="module" src="{{ asset('assets/lead-form.js') }}?v={{ filemtime(public_path('assets/lead-form.js')) }}"></script>
 @endpush
 
 @section('content')
@@ -77,6 +77,11 @@
                         </div>
                         <div class="field">
                             <label for="assignedEmployee">Assigned consultant (CRM)</label>
+                            <div class="consultant-search" id="consultantSearchPanel" hidden>
+                                <input type="search" id="consultantSearch" aria-label="Search consultants"
+                                    aria-controls="assignedEmployee" placeholder="Search by name or code" autocomplete="off">
+                                <p class="hint" id="consultantSearchStatus" role="status"></p>
+                            </div>
                             <select id="assignedEmployee" name="assigned_employee_id">
                                 <option value="">Select consultant</option>
                             </select>

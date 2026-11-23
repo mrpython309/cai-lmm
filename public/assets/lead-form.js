@@ -24,6 +24,9 @@ const crmCompany = form.elements.company_id;
 const crmBranch = form.elements.branch_id;
 const branchName = form.elements.branch_name;
 const assignedEmployee = form.elements.assigned_employee_id;
+const consultantSearch = document.getElementById('consultantSearch');
+const consultantSearchPanel = document.getElementById('consultantSearchPanel');
+const consultantSearchStatus = document.getElementById('consultantSearchStatus');
 const enquiryType = form.elements.enquiry_type_id;
 const enquiryTypeName = form.elements.enquiry_type;
 const crmLeadSource = form.elements.lead_source_id;
@@ -37,6 +40,7 @@ const statusResponseName = form.elements.status_response;
 
 let catalog;
 let crmModelsList = [];
+let employeeOptions = [];
 let savedLead = null;
 let saving = false;
 
@@ -58,6 +62,23 @@ async function loadEmployees(endpoint) {
         page++;
     } while (page <= lastPage);
     return employees;
+}
+
+function renderEmployeeOptions(selected = null) {
+    const query = consultantSearch.value.trim().toLowerCase();
+    const matches = employeeOptions.filter(option => option.text.toLowerCase().includes(query));
+    const visible = selected?.value && !matches.includes(selected) ? [selected, ...matches] : matches;
+
+    assignedEmployee.replaceChildren(new Option('Select consultant', ''), ...visible);
+    assignedEmployee.value = selected?.value ?? '';
+
+    if (!query) {
+        consultantSearchStatus.textContent = '';
+    } else if (matches.length) {
+        consultantSearchStatus.textContent = matches.length === 1 ? '1 consultant found' : `${matches.length} consultants found`;
+    } else {
+        consultantSearchStatus.textContent = 'No consultants match your search.';
+    }
 }
 
 function fillSelect(select, choices, placeholder) {
@@ -274,6 +295,8 @@ async function loadResponses(statusId, selectedResponseId = null) {
 }
 
 function populate(lead = {}) {
+    consultantSearch.value = '';
+    renderEmployeeOptions();
     syncApplication(lead.application ?? '');
     for (const control of fields.elements) {
         if (!control.name) continue;
@@ -429,16 +452,12 @@ async function loadForm() {
                 ...crmCompanies.data.map(c => new Option(`${c.name} (${c.code || 'N/A'})`, c.id))
             );
         }
-        if (crmEmployees?.length && assignedEmployee) {
-            assignedEmployee.replaceChildren(
-                new Option('Select consultant', ''),
-                ...crmEmployees.map(employee => {
-                    const option = new Option(employee.employee_name + ' (' + employee.emp_code + ')', employee.id);
-                    option.dataset.name = employee.employee_name;
-                    return option;
-                })
-            );
-        }
+        employeeOptions = (crmEmployees ?? []).map(employee => {
+            const option = new Option(employee.employee_name + ' (' + employee.emp_code + ')', employee.id);
+            option.dataset.name = employee.employee_name;
+            return option;
+        });
+        consultantSearchPanel.hidden = employeeOptions.length <= 12;
         if (crmEnquiries?.data?.length && enquiryType) {
             enquiryType.replaceChildren(
                 new Option('Select enquiry type', ''),
@@ -517,7 +536,13 @@ form.addEventListener('change', event => {
     }
 });
 
-form.addEventListener('input', () => {
+consultantSearch.addEventListener('input', () => renderEmployeeOptions(assignedEmployee.selectedOptions[0]));
+consultantSearch.addEventListener('keydown', event => {
+    if (event.key === 'Enter') event.preventDefault();
+});
+
+form.addEventListener('input', event => {
+    if (event.target === consultantSearch) return;
     clearErrors();
     success.hidden = true;
     submit.disabled = false;
