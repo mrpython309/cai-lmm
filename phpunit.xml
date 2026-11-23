@@ -27,6 +27,9 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="MAHINDRA_API_BASE_URL" value="http://mahindra-crm.test/api/v1"/>
+        <env name="MAHINDRA_API_KEY" value="test-secret-key-123"/>
+        <env name="MAHINDRA_API_TIMEOUT" value="2"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

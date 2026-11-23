@@ -33,26 +33,63 @@
     <form id="leadForm" method="post"
           data-options-url="{{ route('api.lead-options') }}"
           data-lead-url="{{ $lead ? route('api.leads.show', $lead) : route('api.leads.store') }}"
+          data-companies-url="{{ route('api.mahindra.companies') }}"
+          data-employees-url="{{ route('api.mahindra.employees') }}"
+          data-models-url="{{ route('api.mahindra.vehicle-models') }}"
+          data-enquiry-types-url="{{ route('api.mahindra.enquiry-types') }}"
+          data-statuses-url="{{ route('api.mahindra.lead-statuses') }}"
           data-editing="{{ $lead ? 'true' : 'false' }}">
         <fieldset class="form-fields" id="formFields" aria-label="Customer lead details" disabled>
             <section class="card" aria-labelledby="leadInformation">
-                <div class="section-head"><div class="step">01</div><div><h2 id="leadInformation">Lead information</h2><p>Identify the customer and how the opportunity was generated.</p></div></div>
+                <div class="section-head"><div class="step">01</div><div><h2 id="leadInformation">Lead information</h2><p>Identify the customer, branch, and how the opportunity was generated.</p></div></div>
                 <div class="section-body"><div class="grid">
+                    <div class="field">
+                        <label for="enquiryType">Enquiry type (CRM)</label>
+                        <select id="enquiryType" name="enquiry_type_id">
+                            <option value="">Select enquiry type</option>
+                        </select>
+                        <input type="hidden" name="enquiry_type" id="enquiryTypeName">
+                    </div>
+                    <div class="field">
+                        <label for="crmLeadSource">Enquiry source (CRM)</label>
+                        <select id="crmLeadSource" name="lead_source_id" disabled>
+                            <option value="">Select enquiry type first</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="crmCompany">Dealer organization (CRM)</label>
+                        <select id="crmCompany" name="company_id">
+                            <option value="">Select dealer company</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="crmBranch">Dealer branch (CRM)</label>
+                        <select id="crmBranch" name="branch_id" disabled>
+                            <option value="">Select company first</option>
+                        </select>
+                        <input type="hidden" name="branch_name" id="branchName">
+                    </div>
+                    <div class="field">
+                        <label for="assignedEmployee">Assigned consultant (CRM)</label>
+                        <select id="assignedEmployee" name="assigned_employee_id">
+                            <option value="">Select consultant</option>
+                        </select>
+                    </div>
                     <div class="field full">
-                        <span class="field-label" id="leadSourceLabel">Lead source <span class="req">*</span></span>
+                        <span class="field-label" id="leadSourceLabel">Lead source channel <span class="req">*</span></span>
                         <div class="source-grid" role="radiogroup" aria-labelledby="leadSourceLabel" aria-describedby="leadSourceHint" data-choices="lead_source" data-required></div>
-                        <div class="hint" id="leadSourceHint">Select the channel through which this lead was received.</div>
+                        <div class="hint" id="leadSourceHint">Select the primary channel through which this lead was received.</div>
                     </div>
                     <div class="field">
                         <label for="businessType">Business type <span class="req">*</span></label>
                         <select id="businessType" name="business_type" required><option value="">Select business type</option></select>
                     </div>
                     <div class="field company-field hidden">
-                        <label for="companyName">Company name <span class="req">*</span></label>
+                        <label for="companyName">Customer company name <span class="req">*</span></label>
                         <input name="company_name" id="companyName" maxlength="255" placeholder="Enter company / firm name" disabled>
                     </div>
                     <div class="field">
-                        <label for="location">Company / customer location <span class="req">*</span></label>
+                        <label for="location">Customer location / area <span class="req">*</span></label>
                         <input id="location" name="location" maxlength="255" required placeholder="Area, city or business location">
                     </div>
                     <div class="field">
@@ -97,6 +134,14 @@
                     <div class="field">
                         <label for="model">Recommended Mahindra model <span class="req">*</span></label>
                         <select name="recommended_model" id="model" required><option value="">Select application first</option></select>
+                        <input type="hidden" name="vehicle_model_id" id="vehicleModelId">
+                    </div>
+                    <div class="field">
+                        <label for="crmVariant">Model variant (CRM)</label>
+                        <select name="variant_id" id="crmVariant" disabled>
+                            <option value="">Select model first</option>
+                        </select>
+                        <input type="hidden" name="variant_name" id="variantName">
                     </div>
                     <div class="field">
                         <span class="field-label" id="testDriveLabel">Test drive required?</span>
@@ -117,10 +162,24 @@
                         <div class="timeline" role="radiogroup" aria-labelledby="priorityLabel" data-choices="priority" data-required></div>
                     </div>
                     <div class="field">
+                        <label for="crmLeadStatus">Lead status (CRM)</label>
+                        <select name="lead_status_id" id="crmLeadStatus">
+                            <option value="">Select status</option>
+                        </select>
+                        <input type="hidden" name="lead_status" id="leadStatus">
+                    </div>
+                    <div class="field">
+                        <label for="crmStatusResponse">Status response (CRM)</label>
+                        <select name="status_response_id" id="crmStatusResponse" disabled>
+                            <option value="">Select status first</option>
+                        </select>
+                        <input type="hidden" name="status_response" id="statusResponse">
+                    </div>
+                    <div class="field">
                         <label for="followUp">Next follow-up date <span class="req">*</span></label>
                         <input type="date" name="follow_up_date" id="followUp" max="9999-12-31" required>
                     </div>
-                    <div class="field span2">
+                    <div class="field full">
                         <label for="remarks">Remarks / customer requirement</label>
                         <textarea id="remarks" name="remarks" maxlength="5000" placeholder="Enter business requirement, expected quantity, route / usage details, objections or other notes..."></textarea>
                     </div>

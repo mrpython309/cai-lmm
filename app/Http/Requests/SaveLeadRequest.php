@@ -28,7 +28,7 @@ class SaveLeadRequest extends FormRequest
         }
 
         return [
-            'lead_source' => ['required', 'string', $choice('lead_source')],
+            'lead_source' => ['required', 'string', 'max:120'],
             'business_type' => ['required', 'string', $choice('business_type')],
             'company_name' => [Rule::excludeIf(! $companyRequired), 'required', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
@@ -40,12 +40,29 @@ class SaveLeadRequest extends FormRequest
             'hotspot' => ['required', 'string', $choice('hotspot', $application)],
             'current_vehicle' => ['nullable', 'string', $choice('current_vehicle')],
             'exchange' => ['nullable', 'string', $choice('exchange')],
-            'recommended_model' => ['required', 'string', $choice('recommended_model', $application)],
+            'recommended_model' => ['required', 'string', 'max:120'],
             'test_drive' => ['nullable', 'string', $choice('test_drive')],
             'finance' => ['nullable', 'string', $choice('finance')],
             'priority' => ['required', 'string', $choice('priority')],
             'follow_up_date' => $followUp,
             'remarks' => ['nullable', 'string', 'max:5000'],
+
+            // Mahindra CRM Master References
+            'organization_id' => ['nullable', 'integer'],
+            'company_id' => ['nullable', 'integer'],
+            'branch_id' => ['nullable', 'integer'],
+            'branch_name' => ['nullable', 'string', 'max:255'],
+            'assigned_employee_id' => ['nullable', 'integer'],
+            'vehicle_model_id' => ['nullable', 'integer'],
+            'variant_id' => ['nullable', 'integer'],
+            'variant_name' => ['nullable', 'string', 'max:120'],
+            'enquiry_type_id' => ['nullable', 'integer'],
+            'enquiry_type' => ['nullable', 'string', 'max:120'],
+            'lead_source_id' => ['nullable', 'integer'],
+            'lead_status_id' => ['nullable', 'integer'],
+            'lead_status' => ['nullable', 'string', 'max:120'],
+            'status_response_id' => ['nullable', 'integer'],
+            'status_response' => ['nullable', 'string', 'max:120'],
         ];
     }
 

@@ -2,10 +2,12 @@ const csrf = document.querySelector('meta[name="csrf-token"]').content;
 const timeZone = document.querySelector('meta[name="workspace-timezone"]').content;
 
 export const leadLabels = {
+    enquiry_type: 'Enquiry type',
     lead_source: 'Lead source',
     business_type: 'Business type',
-    company_name: 'Company name',
+    branch_name: 'Branch / Location',
     location: 'Company / customer location',
+    company_name: 'Company name',
     customer_name: 'Customer name',
     mobile: 'Mobile number',
     email: 'Email address',
@@ -15,9 +17,12 @@ export const leadLabels = {
     current_vehicle: 'Current vehicle',
     exchange: 'Exchange interested?',
     recommended_model: 'Recommended Mahindra model',
+    variant_name: 'Variant',
     test_drive: 'Test drive required?',
     finance: 'Finance required?',
     priority: 'Purchase timeline',
+    lead_status: 'Lead status',
+    status_response: 'Status response',
     follow_up_date: 'Next follow-up date',
     remarks: 'Remarks / customer requirement',
 };
