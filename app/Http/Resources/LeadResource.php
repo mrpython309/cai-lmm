@@ -12,6 +12,7 @@ class LeadResource extends JsonResource
         return [
             'id' => $this->id,
             ...$this->resource->only($this->resource->getFillable()),
+            'assigned_employee_display' => $this->assigned_employee_name ?? ($this->assigned_employee_id ? 'Consultant #'.$this->assigned_employee_id : null),
             'follow_up_date' => $this->follow_up_date->toDateString(),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),

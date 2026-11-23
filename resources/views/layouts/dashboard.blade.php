@@ -7,13 +7,6 @@
     <meta name="workspace-timezone" content="{{ config('app.timezone') }}">
     <title>CAI LMM | @yield('title')</title>
     <link rel="stylesheet" href="{{ asset('assets/dashboard.css') }}?v={{ filemtime(public_path('assets/dashboard.css')) }}">
-    @auth
-        @php
-            $workspaceScript = asset('assets/workspace.js');
-            $moduleVersions = ['imports' => [$workspaceScript => $workspaceScript.'?v='.filemtime(public_path('assets/workspace.js'))]];
-        @endphp
-        <script type="importmap">@json($moduleVersions)</script>
-    @endauth
     @stack('scripts')
 </head>
 <body>
